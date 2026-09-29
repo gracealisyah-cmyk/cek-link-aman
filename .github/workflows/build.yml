@@ -1,0 +1,40 @@
+name: Build APK
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Buat File APK
+        run: |
+          mkdir -p app/src/main/java/com/grace/ceklink
+          mkdir -p app/src/main/assets
+          echo "include ':app'" > settings.gradle
+          cat > build.gradle <<'GR'
+          plugins { id 'com.android.application' version '8.1.0' apply false }
+          GR
+          cat > app/build.gradle <<'GR'
+          plugins { id 'com.android.application' }
+          android { compileSdk 34; namespace 'com.grace.ceklink'; defaultConfig { applicationId "com.grace.ceklink"; minSdk 21; targetSdk 34; versionCode 1; versionName "1.0" } }
+          GR
+          cat > app/src/main/AndroidManifest.xml <<'MF'
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:label="Cek Link Aman"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>
+          MF
+          cat > app/src/main/java/com/grace/ceklink/MainActivity.java <<'JV'
+          package com.grace.ceklink; import android.app.Activity; import android.os.Bundle; import android.webkit.WebView; public class MainActivity extends Activity { protected void onCreate(Bundle b){ super.onCreate(b); WebView w=new WebView(this); w.getSettings().setJavaScriptEnabled(true); w.loadUrl("file:///android_asset/index.html"); setContentView(w);} }
+          JV
+          cat > app/src/main/assets/index.html <<'HTML'
+          <!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cek Link Aman</title><style>body{font-family:sans-serif;background:#f5f7ff;padding:20px}.box{background:white;padding:20px;border-radius:15px;box-shadow:0 4px 10px rgba(0,0,0,.1)}input{width:100%;padding:15px;border-radius:10px;border:2px solid #ddd;box-sizing:border-box}button{width:100%;padding:15px;background:#25D366;color:white;border:none;border-radius:10px;font-weight:bold;margin-top:10px;font-size:18px}.result{margin-top:20px;padding:15px;border-radius:10px;display:none;font-weight:bold}.aman{background:#d4edda;color:#155724}.waspada{background:#fff3cd;color:#856404}.bahaya{background:#f8d7da;color:#721c24}</style></head><body><div class="box"><h2>🔒 Cek Link Aman</h2><p>Paste link WA disini!</p><input id="linkInput" placeholder="https://contoh-link.com"><button onclick="cek()">CEK SEKARANG</button><div id="hasil" class="result"></div><div id="detail" style="margin-top:10px;font-size:14px"></div></div><script>function cek(){let url=document.getElementById('linkInput').value.trim();if(!url)return alert('Masukan link beb!');if(!url.startsWith('http'))url='https://'+url;let level='aman',alasan=[];try{let host=new URL(url).hostname.toLowerCase();if(/^\d+\.\d+\.\d+\.\d+$/.test(host)){level='bahaya';alasan.push('❌ Pakai IP Address, 99% penipuan!')}if(host.includes('trycloudflare.com')||host.includes('ngrok.io')){level='bahaya';alasan.push('❌ Link sementara (trycloudflare) - bahaya buat transaksi!')}if(['bit.ly','s.id','tinyurl','cutt.ly'].some(s=>host.includes(s))){if(level!='bahaya')level='waspada';alasan.push('⚠️ Link pendek, tujuan disembunyiin')}if(host.includes('sh0pee')||host.includes('shopee-')&&!host.endsWith('shopee.co.id')||host.includes('dana-kaget')){level='bahaya';alasan.push('❌ Nama mirip brand terkenal tapi palsu!')}if(host.endsWith('.xyz')||host.endsWith('.tk')||host.endsWith('.top')){if(level!='bahaya')level='waspada';alasan.push('⚠️ Domain gratisan.xyz/.tk/.top')}if(url.toLowerCase().includes('hadiah')&&url.toLowerCase().includes('jt')){if(level!='bahaya')level='waspada';alasan.push('⚠️ Iming-iming hadiah besar')}if(level=='aman')alasan.push('✅ Domain resmi aman')}catch(e){level='bahaya';alasan.push('❌ Format link aneh')}let h=document.getElementById('hasil');h.style.display='block';h.className='result '+level;h.innerHTML=level=='aman'?'✅ AMAN - Boleh Dibuka':level=='waspada'?'⚠️ WASPADA - Hati-hati!':'❌ BAHAYA! JANGAN DIKLIK!';document.getElementById('detail').innerHTML=alasan.join('<br>')}</script></body></html>
+          HTML
+      - uses: gradle/gradle-build-action@v2
+        with:
+          gradle-version: 8.5
+      - run: gradle assembleDebug
+      - uses: actions/upload-artifact@v3
+        with:
+          name: CekLinkAman-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
