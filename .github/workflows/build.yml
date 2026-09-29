@@ -27,7 +27,7 @@ jobs:
           cd app
           gradle wrapper --gradle-version 8.5
           chmod +x gradlew
-         ./gradlew assembleDebug
+          ./gradlew assembleDebug
       - uses: actions/upload-artifact@v4
         with:
           name: APK-Cek-Link-Aman
