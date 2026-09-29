@@ -10,6 +10,9 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
       - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.5'
       - name: Make project
         run: |
           rm -rf app
@@ -18,10 +21,9 @@ jobs:
           echo "include ':app'" > settings.gradle
           echo "plugins { id 'com.android.application' version '8.1.0' apply false }" > build.gradle
           echo "plugins { id 'com.android.application' } android { compileSdk 34; namespace 'com.grace.ceklink'; defaultConfig { applicationId 'com.grace.ceklink'; minSdk 21; targetSdk 34; versionCode 1; versionName '1.0' } }" > app/build.gradle
-          mkdir -p app/src/main
           echo '<?xml version="1.0" encoding="utf-8"?><manifest xmlns:android="http://schemas.android.com/apk/res/android"><application android:label="Cek Link Aman"><activity android:name=".MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>' > app/src/main/AndroidManifest.xml
           echo 'package com.grace.ceklink; import android.app.Activity; import android.os.Bundle; import android.webkit.WebView; public class MainActivity extends Activity { protected void onCreate(Bundle b){ super.onCreate(b); WebView w=new WebView(this); w.getSettings().setJavaScriptEnabled(true); w.loadUrl("file:///android_asset/index.html"); setContentView(w);} }' > app/src/main/java/com/grace/ceklink/MainActivity.java
-          echo '<html><body><h2>Cek Link Aman</h2><input id=i style=width:100%;padding:15px><button onclick=c() style=width:100%;padding:15px;background:#25D366;color:#fff>Cek</button><div id=h></div><div id=d></div><script>function c(){let u=document.getElementById("i").value;if(!u.startsWith("http"))u="https://"+u;let l="aman",a=[];try{let ho=new URL(u).hostname;if(/^\d+\.\d+\.\d+\.\d+$/.test(ho)){l="bahaya";a.push("IP Address")}if(ho.includes("trycloudflare")){l="bahaya";a.push("trycloudflare")}if(l=="aman")a.push("Aman")}catch(e){l="bahaya"};document.getElementById("h").innerHTML=l;document.getElementById("d").innerHTML=a.join("<br>")}</script></body></html>' > app/src/main/assets/index.html
+          echo '<html><body><h2>Cek Link Aman</h2><input id=i placeholder="Paste link"><button onclick=c()>CEK</button><div id=h></div><div id=d></div><script>function c(){let u=document.getElementById("i").value;if(!u.startsWith("http"))u="https://"+u;let l="aman",a=[];try{let ho=new URL(u).hostname;if(/^\d+\.\d+\.\d+\.\d+$/.test(ho)){l="bahaya";a.push("IP")}if(ho.includes("trycloudflare")){l="bahaya";a.push("trycloudflare")}if(l=="aman")a.push("Aman")}catch(e){l="bahaya"};document.getElementById("h").innerHTML=l;document.getElementById("d").innerHTML=a.join("<br>")}</script></body></html>' > app/src/main/assets/index.html
       - name: Build
         run: |
           cd app
@@ -32,4 +34,3 @@ jobs:
         with:
           name: APK-Cek-Link-Aman
           path: app/build/outputs/apk/debug/app-debug.apk
-          
